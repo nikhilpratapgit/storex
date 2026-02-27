@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,4 +61,14 @@ func CheckPassword(hashedPassword, plainPassword string) error {
 		[]byte(hashedPassword),
 		[]byte(plainPassword),
 	)
+}
+func GenerateJWT(userID, sessionID, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"userId":    userID,
+		"sessionId": sessionID,
+		"role":      role,
+		"exp":       time.Now().Add(time.Minute * 100).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 }

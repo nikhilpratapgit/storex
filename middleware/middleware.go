@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"net/http"
+	"os"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/nikhilpratapgit/storex/database/dbHelper"
 	"github.com/nikhilpratapgit/storex/models"
 	"github.com/nikhilpratapgit/storex/utils"
@@ -18,27 +20,44 @@ func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenStr := r.Header.Get("Authorization")
 		if tokenStr == "" {
-			//http.Error(w, "missing token", http.StatusUnauthorized)
 			utils.RespondError(w, http.StatusUnauthorized, nil, "missing token")
 			return
 		}
-		userID, err := dbHelper.VaidateSession(tokenStr)
-		fmt.Println(userID)
+		token, parseErr := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("invalid signing method")
+			}
+			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+		})
+
+		if parseErr != nil || !token.Valid {
+			utils.RespondError(w, http.StatusUnauthorized, parseErr, "invalid token")
+			return
+		}
+
+		claimValues, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
+			return
+		}
+		sessionID := claimValues["sessionId"].(string)
+		userID, err := dbHelper.VaidateSession(sessionID)
+		//fmt.Println(userID)
 		if err != nil {
 			//http.Error(w, "invalid user", http.StatusUnauthorized)
 			utils.RespondError(w, http.StatusUnauthorized, err, "invalid user")
 			return
 		}
-		userDetail, err := dbHelper.GetUserByID(userID.String())
-		if err != nil {
-			utils.RespondError(w, http.StatusUnauthorized, err, "user not found")
-			return
-		}
+		//userDetail, err := dbHelper.GetUserByID(userID)
+		//if err != nil {
+		//	utils.RespondError(w, http.StatusUnauthorized, err, "user not found")
+		//	return
+		//}
 
 		user := &models.UserCtx{
 			UserID:    userID,
-			SessionID: tokenStr,
-			Role:      userDetail.Role,
+			SessionID: sessionID,
+			Role:      claimValues["role"].(string),
 		}
 		ctx := context.WithValue(r.Context(), userContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))

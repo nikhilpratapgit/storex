@@ -29,12 +29,19 @@ func SetupRoutes() *Server {
 		v1.Group(func(v1 chi.Router) {
 			v1.Use(middleware.Auth)
 			v1.Delete("/logout", handler.Logout)
+			v1.Get("/user/{id}", handler.FetchUser)
 			v1.Group(func(v1 chi.Router) {
 				v1.Use(middleware.RoleMiddleware("admin", "asset-manager"))
 				// role based
 				v1.Post("/asset", handler.CreateAsset)
 				v1.Get("/assets", handler.ShowAssets)
-
+				v1.Put("/assign-assets/{id}", handler.AssignedAssets)
+				v1.Put("/service-assets/{id}", handler.ServiceAssets)
+				//delete assets
+				v1.Put("/delete-asset/{id}", handler.DeleteAsset)
+				v1.Get("/user-info", handler.GetAllUsers)
+				v1.Put("/update-asset", handler.UpdateAsset)
+				// show archived assets also
 			})
 
 		})

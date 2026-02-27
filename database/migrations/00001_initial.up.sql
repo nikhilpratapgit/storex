@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS user_session (
     archived_at TIMESTAMPTZ
     );
 
-CREATE TABLE laptop (
+CREATE TABLE laptops (
                         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         asset_id         UUID UNIQUE REFERENCES assets(id),
                         processor        TEXT,
@@ -106,21 +106,21 @@ CREATE TABLE laptop (
                         device_password  TEXT NOT NULL
 );
 
-CREATE TABLE keyboard (
+CREATE TABLE keyboards (
                           id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           asset_id     UUID UNIQUE REFERENCES assets(id),
                           layout       TEXT,
                           connectivity connection_type
 );
 
-CREATE TABLE mouse (
+CREATE TABLE mouses (
                        id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        asset_id     UUID UNIQUE REFERENCES assets(id),
                        dpi          INT,
                        connectivity connection_type
 );
 
-CREATE TABLE mobile (
+CREATE TABLE mobiles (
                         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         asset_id         UUID UNIQUE REFERENCES assets(id),
                         operating_system               TEXT NOT NULL,
