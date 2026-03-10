@@ -40,6 +40,7 @@ func main() {
 		fmt.Printf("failed while initialize and migrate database:%v", err)
 	}
 	fmt.Println("server is running")
+	fmt.Println("test")
 	ServerErr := http.ListenAndServe(":8080", srv)
 	if ServerErr != nil {
 		log.Fatal("")
