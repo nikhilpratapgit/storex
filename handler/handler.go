@@ -211,9 +211,18 @@ func ShowAssets(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch assets")
 		return
 	}
+	Summary, err := dbHelper.DashboardData()
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch dashboard data")
+		return
+	}
+	Data := models.DashboardData{
+		Summary: Summary,
+		Assets:  Assets,
+	}
 	utils.RespondJSON(w, http.StatusOK, struct {
 		Assets models.DashboardData `json:"assets"`
-	}{Assets: Assets})
+	}{Assets: Data})
 }
 func AssignedAssets(w http.ResponseWriter, r *http.Request) {
 	var assignedAsset models.AssignedAsset
@@ -287,10 +296,10 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	name := query.Get("name")
 	role := query.Get("role")
-	employment := query.Get("employment")
+	userType := query.Get("type")
 	assetStatus := query.Get("status")
 
-	userDetails, err := dbHelper.GetUserInfo(name, role, employment, assetStatus)
+	userDetails, err := dbHelper.GetUserInfo(name, role, userType, assetStatus)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch users")
 		return

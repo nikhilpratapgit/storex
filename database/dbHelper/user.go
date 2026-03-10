@@ -127,7 +127,7 @@ func CreateAsset(tx *sqlx.Tx, assetRequest models.Asset) (string, error) {
 }
 
 // FETCH ASSETS
-func ShowAssets(typeStr, statusStr, ownerStr, brandStr, modelStr, serialNumberStr string, limit, offset int) (models.DashboardData, error) {
+func ShowAssets(typeStr, statusStr, ownerStr, brandStr, modelStr, serialNumberStr string, limit, offset int) ([]models.AssetInfo, error) {
 	SQL := `SELECT brand ,model ,type ,serial_number ,status ,owner ,created_at
 			FROM assets
 			WHERE archived_at IS NULL 
@@ -154,8 +154,33 @@ func ShowAssets(typeStr, statusStr, ownerStr, brandStr, modelStr, serialNumberSt
 			`
 
 	assets := make([]models.AssetInfo, 0)
-	var summary models.DashboardSummary
+	//var summary models.DashboardSummary
 	// make different func
+
+	//Sql := `SELECT
+	//		COUNT(*) AS total,
+	//		COUNT(*) FILTER (WHERE status = 'available') AS available,
+	//		COUNT(*) FILTER (WHERE status = 'assigned') AS assigned,
+	//		COUNT(*) FILTER (WHERE status = 'for_repair') AS waiting_for_repair,
+	//		COUNT(*) FILTER (WHERE status = 'in_service') AS in_service,
+	//		COUNT(*) FILTER (WHERE status = 'damaged') AS damaged
+	//	FROM assets
+	//	WHERE archived_at IS NULL`
+	//
+	//var res models.DashboardData
+	//DashboardErr := database.Store.Get(&summary, Sql)
+	//if DashboardErr != nil {
+	//	return res, DashboardErr
+	//}
+
+	err := database.Store.Select(&assets, SQL, brandStr, modelStr, serialNumberStr, typeStr, statusStr, ownerStr, limit, offset)
+	if err != nil {
+		return assets, err
+	}
+	return assets, nil
+}
+func DashboardData() (models.DashboardSummary, error) {
+	var summary models.DashboardSummary
 
 	Sql := `SELECT
 			COUNT(*) AS total,
@@ -167,20 +192,13 @@ func ShowAssets(typeStr, statusStr, ownerStr, brandStr, modelStr, serialNumberSt
 		FROM assets
 		WHERE archived_at IS NULL`
 
-	var res models.DashboardData
+	//var res models.DashboardData
 	DashboardErr := database.Store.Get(&summary, Sql)
 	if DashboardErr != nil {
-		return res, DashboardErr
+		return summary, DashboardErr
 	}
+	return summary, nil
 
-	err := database.Store.Select(&assets, SQL, brandStr, modelStr, serialNumberStr, typeStr, statusStr, ownerStr, limit, offset)
-	if err != nil {
-		return res, err
-	}
-	return models.DashboardData{
-		Summary: summary,
-		Assets:  assets,
-	}, nil
 }
 func CreateLaptop(tx *sqlx.Tx, assetID string, assetRequest models.LaptopSpecs) error {
 	SQL := `INSERT INTO laptop (asset_id,processor,ram,storage,operating_system,charger,device_password)
@@ -269,6 +287,7 @@ func ServiceAssets(assetID string, serviceStart, serviceEnd, returnedOn time.Tim
 			returned_on=$3
 			WHERE id=$4
 			    AND status !='assigned'
+			    AND status != 'available'
 			AND archived_at IS NULL 
 			`
 	_, err := database.Store.Exec(SQL, serviceStart, serviceEnd, returnedOn, assetID)
@@ -293,7 +312,7 @@ func DeleteAsset(archivedBy, assetID string) error {
 }
 func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
 	SQL := `
-		SELECT id, brand, model, status, asset_type
+		SELECT id, brand, model, status, type
 		FROM assets
 		WHERE assigned_to=$1
 		AND ($2 = '' OR status::TEXT=$2)
@@ -302,16 +321,16 @@ func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error)
 	err := database.Store.Select(&assetDetails, SQL, userID, assetStatus)
 	return assetDetails, err
 }
-func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoRequest, error) {
+func GetUserInfo(name, role, userType, assetStatus string) ([]models.UserInfoRequest, error) {
 	SQL := `
-		SELECT id, name, email, phone_number, role, employment, created_at
+		SELECT id, name, email, phone_number, role, type, created_at
 		FROM users
 		WHERE ($1 = '' OR name LIKE '%' || $1 || '%')
 		AND ($2 = '' OR role::TEXT=$2)
-		AND ($3 = '' OR employment::TEXT=$3)
+		AND ($3 = '' OR type::TEXT=$3)
 	`
 	users := make([]models.UserInfoRequest, 0)
-	err := database.Store.Select(&users, SQL, name, role, employment)
+	err := database.Store.Select(&users, SQL, name, role, userType)
 	if err != nil {
 		return users, err
 	}

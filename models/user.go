@@ -121,7 +121,7 @@ type UserInfoRequest struct {
 	Email        string             `json:"email" db:"email" validate:"required,email"`
 	PhoneNumber  string             `json:"phoneNumber" db:"phone_no" validate:"required,len=10"`
 	Role         string             `json:"role" db:"role" validate:"required"`
-	Employment   string             `json:"type" db:"type" validate:"required"`
+	Type         string             `json:"type" db:"type" validate:"required"`
 	CreatedAt    string             `json:"createdAt" db:"created_at" validate:"required"`
 	AssetDetails []AssetInfoRequest `json:"assetDetails"`
 }
