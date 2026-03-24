@@ -66,12 +66,12 @@ func Tx(fn func(tx *sqlx.Tx) error) error {
 	defer func() {
 		if err != nil {
 			if rollBackErr := tx.Rollback(); rollBackErr != nil {
-				fmt.Println("failed to rollback tx : %s", rollBackErr)
+				fmt.Printf("failed to rollback tx : %s", rollBackErr)
 			}
 			return
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
-			fmt.Println("failed to commit: %s", commitErr)
+			fmt.Printf("failed to commit: %s", commitErr)
 		}
 	}()
 	err = fn(tx)

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -40,11 +41,10 @@ func Auth(next http.Handler) http.Handler {
 			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
 			return
 		}
-		sessionID := claimValues["sessionId"].(string)
-		userID, err := dbHelper.VaidateSession(sessionID)
-		//fmt.Println(userID)
+		sessionID := claimValues["sessionID"].(string)
+		fmt.Println(sessionID)
+		userID, err := dbHelper.ValidateSession(sessionID)
 		if err != nil {
-			//http.Error(w, "invalid user", http.StatusUnauthorized)
 			utils.RespondError(w, http.StatusUnauthorized, err, "invalid user")
 			return
 		}
@@ -59,6 +59,7 @@ func Auth(next http.Handler) http.Handler {
 			SessionID: sessionID,
 			Role:      claimValues["role"].(string),
 		}
+		fmt.Println(user.Role)
 		ctx := context.WithValue(r.Context(), userContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -72,6 +73,10 @@ func RoleMiddleware(Roles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userCtx := UserContext(r)
+			if userCtx == nil {
+				utils.RespondError(w, http.StatusUnauthorized, nil, "unauthorized")
+				return
+			}
 			UserRole := userCtx.Role
 
 			for _, role := range Roles {
