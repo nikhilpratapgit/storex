@@ -20,10 +20,7 @@ type Error struct {
 
 func ParseBody(body io.Reader, out interface{}) error {
 	err := json.NewDecoder(body).Decode(out)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 func EncodeJSONBody(resp http.ResponseWriter, data interface{}) error {
 	return json.NewEncoder(resp).Encode(data)
@@ -64,11 +61,12 @@ func CheckPassword(hashedPassword, plainPassword string) error {
 }
 func GenerateJWT(userID, sessionID, role string) (string, error) {
 	claims := jwt.MapClaims{
-		"userId":    userID,
-		"sessionId": sessionID,
+		"userID":    userID,
+		"sessionID": sessionID,
 		"role":      role,
-		"exp":       time.Now().Add(time.Minute * 100).Unix(),
+		"exp":       time.Now().Add(7 * 24 * time.Hour).Unix(),
 	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 }

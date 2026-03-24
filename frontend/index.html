@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Google Login</title>
+</head>
+<body>
+
+<h2>Google Login</h2>
+<button onclick="loginWithGoogle()">Login with Google</button>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDw0G8myPSP-f8yJuqLCrazBUUfTk-zcmk",
+        authDomain: "storex-auth.firebaseapp.com",
+        projectId: "storex-auth",
+        appId: "1:230935471880:web:7075f67816eee48c4c2ebd",
+    };
+
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    window.loginWithGoogle = async function () {
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            const idToken = await user.getIdToken();
+
+            console.log("Firebase Token:", idToken);
+            const res = await fetch("http://localhost:8080/v1/auth/google", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    idToken: idToken,
+                    type: "full_time",
+                    phoneNumber: "9876543210",
+                    joiningDate: "2026-03-22"
+                })
+            });
+
+            const data = await res.json();
+            console.log("Backend Response:", data);
+            localStorage.setItem("token", data.token);
+
+            alert("Login Success!");
+        } catch (error) {
+            console.error(error);
+            alert("Login Failed");
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -8,6 +8,7 @@ import (
 
 	"github.com/nikhilpratapgit/storex/database"
 	"github.com/nikhilpratapgit/storex/server"
+	"github.com/nikhilpratapgit/storex/utils"
 )
 
 func getEnv(key, fallback string) string {
@@ -18,6 +19,7 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
+	utils.InitFirebase()
 	srv := server.SetupRoutes()
 
 	dbHost := getEnv("DB_HOST", "localhost")
@@ -37,9 +39,11 @@ func main() {
 		database.SSLMode(sslMode),
 	)
 	if err != nil {
-		fmt.Printf("failed while initialize and migrate database:%v", err)
+		log.Fatalf("failed while initialize and migrate database:%v", err)
+
 	}
 	fmt.Println("server is running")
+	fmt.Println("test")
 	ServerErr := http.ListenAndServe(":8080", srv)
 	if ServerErr != nil {
 		log.Fatal("")
@@ -47,3 +51,6 @@ func main() {
 	}
 	fmt.Println("server started at :8080", serverPort)
 }
+
+// comment down if any api is not working
+//

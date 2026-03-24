@@ -12,20 +12,20 @@ CREATE TYPE asset_status AS ENUM (
     'available',
     'assigned',
     'in_service',
-    'for_repair',
+    'waiting_for_repair',
     'damaged'
 );
 
 CREATE TYPE user_role AS ENUM (
     'admin',
     'employee',
-    'project-manager',
-    'asset-manager',
-    'employee-manager'
+    'project_manager',
+    'asset_manager',
+    'employee_manager'
 );
 
 CREATE TYPE user_type AS ENUM (
-    'full-time',
+    'full_time',
     'intern',
     'freelancer'
 );
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS users (
     email         TEXT        NOT NULL,
     role          user_role   DEFAULT 'employee',
     type          user_type   NOT NULL,
-    phone_no      TEXT        NOT NULL,
+    phone_number      TEXT        NOT NULL,
     password      TEXT        NOT NULL,
     created_at    TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
     archived_at   TIMESTAMPTZ
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS user_session (
     archived_at TIMESTAMPTZ
     );
 
-CREATE TABLE laptops (
+CREATE TABLE laptop (
                         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         asset_id         UUID UNIQUE REFERENCES assets(id),
                         processor        TEXT,
@@ -106,21 +106,21 @@ CREATE TABLE laptops (
                         device_password  TEXT NOT NULL
 );
 
-CREATE TABLE keyboards (
+CREATE TABLE keyboard (
                           id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           asset_id     UUID UNIQUE REFERENCES assets(id),
                           layout       TEXT,
                           connectivity connection_type
 );
 
-CREATE TABLE mouses (
+CREATE TABLE mouse (
                        id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        asset_id     UUID UNIQUE REFERENCES assets(id),
                        dpi          INT,
                        connectivity connection_type
 );
 
-CREATE TABLE mobiles (
+CREATE TABLE mobile (
                         id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         asset_id         UUID UNIQUE REFERENCES assets(id),
                         operating_system               TEXT NOT NULL,
